@@ -483,6 +483,107 @@ vpn/tasks/main.yaml: <br>
 <img width="770" height="739" alt="image" src="https://github.com/user-attachments/assets/4c0086c8-d568-4f71-a5c3-8b810cb123b8" />
 
 
+________________________________________________________________________________________________________________________________
+________________________________________________________________________________________________________________________________
+
+Переделал через docker и systemd: <br>
+
+nginx: <br>
+```
+---
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Start Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create nginx systemd service
+  copy:
+    content: |
+      [Unit]
+      Description=Nginx Docker Container
+      Requires=docker.service
+      After=docker.service
+
+      [Service]
+      Restart=always
+      ExecStart=/usr/bin/docker run --name nginx -p 80:80 nginx:alpine
+      ExecStop=/usr/bin/docker stop nginx
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/nginx-docker.service
+    mode: 0644
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Start nginx service
+  systemd:
+    name: nginx-docker
+    state: started
+    enabled: yes
+```
+<br>
+
+grafana: <br>
+```
+---
+- name: Install Docker
+  apt:
+    name: docker.io
+    state: present
+
+- name: Start Docker service
+  systemd:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Create grafana systemd service
+  copy:
+    content: |
+      [Unit]
+      Description=Grafana Docker Container
+      Requires=docker.service
+      After=docker.service
+
+      [Service]
+      Restart=always
+      ExecStart=/usr/bin/docker run --name grafana -p 3000:3000 -e GF_SECURITY_ADMIN_PASSWORD=admin grafana/grafana:latest
+      ExecStop=/usr/bin/docker stop grafana
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/grafana-docker.service
+    mode: 0644
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Start grafana service
+  systemd:
+    name: grafana-docker
+    state: started
+    enabled: yes
+```
+Итог: <br>
+
+<br>
+<img width="648" height="66" alt="image" src="https://github.com/user-attachments/assets/47a70abe-e68b-4a23-8c3a-755277c62e80" /> <br>
+
+<img width="793" height="551" alt="image" src="https://github.com/user-attachments/assets/c241592f-8bb2-4c0d-a871-64c3f777693d" /> <br>
+
+
+
+
 
 
 
